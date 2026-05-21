@@ -61,6 +61,41 @@ public sealed class PhotoRenameServiceTests
     }
 
     [Fact]
+    public void RenameFile_SupportsMovFiles()
+    {
+        using var temp = new TempDirectory();
+        var sourcePath = temp.WriteFile("IMG_0001.MOV", "new content");
+        var service = CreateService(TestTimestamp);
+
+        var result = service.RenameFile(sourcePath);
+
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405.mov");
+        Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
+        Assert.Equal(expectedPath, result.TargetPath);
+        Assert.False(File.Exists(sourcePath));
+        Assert.Equal("new content", File.ReadAllText(expectedPath));
+    }
+
+    [Fact]
+    public void RenameFile_AddsSuffixWhenMovTargetExists()
+    {
+        using var temp = new TempDirectory();
+        var sourcePath = temp.WriteFile("IMG_0001.MOV", "new content");
+        var targetPath = temp.WriteFile("20240102_030405.mov", "old content");
+        var service = CreateService(TestTimestamp);
+
+        var result = service.RenameFile(sourcePath);
+
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405_001.mov");
+        Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
+        Assert.Equal(expectedPath, result.TargetPath);
+        Assert.False(File.Exists(sourcePath));
+        Assert.True(File.Exists(targetPath));
+        Assert.Equal("old content", File.ReadAllText(targetPath));
+        Assert.Equal("new content", File.ReadAllText(expectedPath));
+    }
+
+    [Fact]
     public void RenameFile_ReturnsAlreadyNamedWhenTargetMatchesSource()
     {
         using var temp = new TempDirectory();

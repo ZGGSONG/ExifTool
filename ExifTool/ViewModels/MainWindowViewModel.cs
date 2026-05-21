@@ -6,7 +6,7 @@ using ExifTool.Services;
 namespace ExifTool.ViewModels;
 
 /// <summary>
-/// Coordinates drag-and-drop photo renaming and exposes results for the main window.
+/// Coordinates drag-and-drop media renaming and exposes results for the main window.
 /// </summary>
 /// <remarks>
 /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
@@ -16,7 +16,7 @@ public partial class MainWindowViewModel(PhotoRenameService renameService) : Vie
 {
     [ObservableProperty] public partial bool IsProcessing { get; set; }
 
-    [ObservableProperty] public partial string StatusMessage { get; set; } = "拖拽图片到窗口中";
+    [ObservableProperty] public partial string StatusMessage { get; set; } = "拖拽图片或 MOV 到窗口中";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.

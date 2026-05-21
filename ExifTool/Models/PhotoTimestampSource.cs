@@ -1,12 +1,12 @@
 namespace ExifTool.Models;
 
 /// <summary>
-/// Identifies the source used to compute a photo's new file name.
+/// Identifies the source used to compute a media file's new name.
 /// </summary>
 public enum PhotoTimestampSource
 {
     /// <summary>
-    /// The timestamp came from image metadata.
+    /// The timestamp came from file metadata.
     /// </summary>
     Exif,
 

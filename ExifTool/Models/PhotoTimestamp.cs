@@ -1,7 +1,7 @@
 namespace ExifTool.Models;
 
 /// <summary>
-/// Contains the timestamp used to name a photo and where that value came from.
+/// Contains the timestamp used to name a media file and where that value came from.
 /// </summary>
 /// <param name="Value">The timestamp used for the output file name.</param>
 /// <param name="Source">The metadata or file-system source that provided the timestamp.</param>

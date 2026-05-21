@@ -4,7 +4,7 @@ using ExifTool.Models;
 namespace ExifTool.Services;
 
 /// <summary>
-/// Renames photo files in place using EXIF capture time or file creation time.
+/// Renames media files in place using metadata capture time or file creation time.
 /// </summary>
 public sealed class PhotoRenameService
 {
@@ -13,7 +13,7 @@ public sealed class PhotoRenameService
     /// </summary>
     public const string FileNameTimestampFormat = "yyyyMMdd_HHmmss";
 
-    private static readonly HashSet<string> SupportedExtensions = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> SupportedMediaExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".3fr",
         ".arw",
@@ -35,6 +35,7 @@ public sealed class PhotoRenameService
         ".jpeg",
         ".jpg",
         ".kdc",
+        ".mov",
         ".nef",
         ".orf",
         ".pcx",
@@ -106,9 +107,9 @@ public sealed class PhotoRenameService
                 return Failure(sourcePath, "文件不存在或不是本地文件。");
             }
 
-            if (!IsSupportedImageFile(sourcePath))
+            if (!IsSupportedMediaFile(sourcePath))
             {
-                return Failure(sourcePath, "不支持的图片格式。");
+                return Failure(sourcePath, "不支持的媒体格式。");
             }
 
             var timestamp = _timestampReader.ReadTimestamp(sourcePath);
@@ -185,13 +186,23 @@ public sealed class PhotoRenameService
     }
 
     /// <summary>
-    /// Determines whether a file extension is one of the supported image formats.
+    /// Determines whether a file extension is one of the supported media formats.
+    /// </summary>
+    /// <param name="filePath">The local path to test.</param>
+    /// <returns>True when the extension is supported; otherwise false.</returns>
+    public static bool IsSupportedMediaFile(string filePath)
+    {
+        return SupportedMediaExtensions.Contains(Path.GetExtension(filePath));
+    }
+
+    /// <summary>
+    /// Determines whether a file extension is supported by the rename workflow.
     /// </summary>
     /// <param name="filePath">The local path to test.</param>
     /// <returns>True when the extension is supported; otherwise false.</returns>
     public static bool IsSupportedImageFile(string filePath)
     {
-        return SupportedExtensions.Contains(Path.GetExtension(filePath));
+        return IsSupportedMediaFile(filePath);
     }
 
     private static PhotoRenameResult Failure(string sourcePath, string errorMessage)

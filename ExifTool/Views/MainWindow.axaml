@@ -29,11 +29,11 @@
                 BorderBrush="#8AA0B5"
                 Background="#F7FAFC">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
-                <TextBlock Text="拖拽图片到窗口中"
+                <TextBlock Text="拖拽图片或 MOV 到窗口中"
                            FontSize="26"
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"/>
-                <TextBlock Text="按拍摄时间原地重命名；没有 EXIF 时使用创建时间；同名目标会添加序号后缀。"
+                <TextBlock Text="按拍摄时间原地重命名；没有元数据时间时使用创建时间；同名目标会添加序号后缀。"
                            Foreground="#415466"
                            FontSize="14"
                            TextAlignment="Center"

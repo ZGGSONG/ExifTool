@@ -6,7 +6,7 @@ using ExifTool.ViewModels;
 namespace ExifTool.Views;
 
 /// <summary>
-/// Hosts the drag-and-drop photo renaming surface.
+/// Hosts the drag-and-drop media renaming surface.
 /// </summary>
 public partial class MainWindow : Window
 {

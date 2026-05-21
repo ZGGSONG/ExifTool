@@ -3,7 +3,7 @@ using System.IO;
 namespace ExifTool.Models;
 
 /// <summary>
-/// Describes the result of renaming one photo file.
+/// Describes the result of renaming one media file.
 /// </summary>
 /// <param name="SourcePath">The original path that was requested for renaming.</param>
 /// <param name="TargetPath">The resulting path, when a target path could be computed.</param>
@@ -43,7 +43,7 @@ public sealed record PhotoRenameResult(
     /// </summary>
     public string TimestampSourceText => TimestampSource switch
     {
-        PhotoTimestampSource.Exif => "EXIF 拍摄时间",
+        PhotoTimestampSource.Exif => "元数据时间",
         PhotoTimestampSource.CreationTime => "文件创建时间",
         null => "-",
         _ => TimestampSource.ToString() ?? "-"

@@ -1,7 +1,7 @@
 namespace ExifTool.Models;
 
 /// <summary>
-/// Represents the outcome of a photo rename request.
+/// Represents the outcome of a media rename request.
 /// </summary>
 public enum PhotoRenameStatus
 {
