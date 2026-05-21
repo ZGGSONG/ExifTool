@@ -1,20 +1,106 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ExifTool.ViewModels"
+        xmlns:models="using:ExifTool.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d"
+        d:DesignWidth="900"
+        d:DesignHeight="560"
         x:Class="ExifTool.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="ExifTool">
+        Title="ExifTool"
+        Width="900"
+        Height="560"
+        MinWidth="720"
+        MinHeight="480">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Grid RowDefinitions="Auto,*,Auto" Margin="24" RowSpacing="18">
+        <Border Grid.Row="0"
+                Padding="28"
+                MinHeight="156"
+                CornerRadius="8"
+                BorderThickness="1"
+                BorderBrush="#8AA0B5"
+                Background="#F7FAFC">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                <TextBlock Text="拖拽图片到窗口中"
+                           FontSize="26"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="按拍摄时间原地重命名；没有 EXIF 时使用创建时间；同名目标会覆盖。"
+                           Foreground="#415466"
+                           FontSize="14"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           MaxWidth="620"/>
+                <ProgressBar Width="260"
+                             Height="4"
+                             IsIndeterminate="True"
+                             IsVisible="{Binding IsProcessing}"/>
+            </StackPanel>
+        </Border>
 
+        <Border Grid.Row="1"
+                BorderThickness="1"
+                BorderBrush="#D0D7DE"
+                CornerRadius="8"
+                Background="#FFFFFF">
+            <Grid RowDefinitions="Auto,*">
+                <Border Grid.Row="0"
+                        Padding="14,12"
+                        Background="#EDF2F7">
+                    <Grid ColumnDefinitions="2*,2*,140,150">
+                        <TextBlock Grid.Column="0" Text="原文件" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="1" Text="新文件" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="2" Text="状态" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="3" Text="时间来源" FontWeight="SemiBold"/>
+                    </Grid>
+                </Border>
+
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding Results}"
+                         BorderThickness="0"
+                         Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="models:PhotoRenameResult">
+                            <Grid ColumnDefinitions="2*,2*,140,150"
+                                  ColumnSpacing="12"
+                                  MinHeight="54"
+                                  Margin="6"
+                                  VerticalAlignment="Center">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding SourceFileName}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding TargetFileName}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding StatusText}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Column="3"
+                                           Text="{Binding TimestampSourceText}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="2"
+                   Text="{Binding StatusMessage}"
+                   Foreground="#415466"
+                   FontSize="14"
+                   TextTrimming="CharacterEllipsis"/>
+    </Grid>
 </Window>
