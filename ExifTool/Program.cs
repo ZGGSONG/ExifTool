@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using System;
 
 namespace ExifTool
@@ -25,7 +25,7 @@ namespace ExifTool
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
 #if DEBUG
-                .WithDeveloperTools()
+                .WithDeveloperTools(_ => { })
 #endif
                 .WithInterFont()
                 .LogToTrace();
