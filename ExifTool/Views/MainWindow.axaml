@@ -33,7 +33,7 @@
                            FontSize="26"
                            FontWeight="SemiBold"
                            HorizontalAlignment="Center"/>
-                <TextBlock Text="按拍摄时间原地重命名；没有 EXIF 时使用创建时间；同名目标会覆盖。"
+                <TextBlock Text="按拍摄时间原地重命名；没有 EXIF 时使用创建时间；同名目标会添加序号后缀。"
                            Foreground="#415466"
                            FontSize="14"
                            TextAlignment="Center"

@@ -11,7 +11,7 @@ public sealed class PhotoRenameService
     /// <summary>
     /// The file-name timestamp pattern used by the app.
     /// </summary>
-    public const string FileNameTimestampFormat = "yyyyMMdd_HHmmss_fff";
+    public const string FileNameTimestampFormat = "yyyyMMdd_HHmmss";
 
     private static readonly HashSet<string> SupportedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -112,7 +112,7 @@ public sealed class PhotoRenameService
             }
 
             var timestamp = _timestampReader.ReadTimestamp(sourcePath);
-            var targetPath = BuildTargetPath(sourcePath, timestamp.Value);
+            var targetPath = ResolveTargetPath(sourcePath, timestamp.Value);
 
             if (PathsEqual(sourcePath, targetPath))
             {
@@ -124,9 +124,7 @@ public sealed class PhotoRenameService
                     null);
             }
 
-            // Overwriting is intentional here: the product requirement says same-name targets
-            // should be replaced instead of skipped or de-duplicated.
-            File.Move(sourcePath, targetPath, overwrite: true);
+            File.Move(sourcePath, targetPath);
 
             return new PhotoRenameResult(
                 sourcePath,
@@ -155,6 +153,35 @@ public sealed class PhotoRenameService
         var fileName = timestamp.ToString(FileNameTimestampFormat, CultureInfo.InvariantCulture) + extension;
 
         return Path.Combine(sourceDirectory, fileName);
+    }
+
+    /// <summary>
+    /// Resolves an in-place target path, adding a numeric suffix when the base name already exists.
+    /// </summary>
+    /// <param name="sourcePath">The local source path.</param>
+    /// <param name="timestamp">The timestamp to format as the file name.</param>
+    /// <returns>The first available target path, or the source path when it is already correctly named.</returns>
+    public static string ResolveTargetPath(string sourcePath, DateTime timestamp)
+    {
+        var sourceDirectory = Path.GetDirectoryName(sourcePath)
+            ?? throw new ArgumentException("源文件必须位于文件夹中。", nameof(sourcePath));
+        var extension = Path.GetExtension(sourcePath).ToLowerInvariant();
+        var baseName = timestamp.ToString(FileNameTimestampFormat, CultureInfo.InvariantCulture);
+
+        for (var suffix = 0; suffix <= 999; suffix++)
+        {
+            var targetFileName = suffix == 0
+                ? baseName + extension
+                : string.Create(CultureInfo.InvariantCulture, $"{baseName}_{suffix:000}{extension}");
+            var targetPath = Path.Combine(sourceDirectory, targetFileName);
+
+            if (PathsEqual(sourcePath, targetPath) || !File.Exists(targetPath))
+            {
+                return targetPath;
+            }
+        }
+
+        throw new IOException("同一拍摄时间的文件过多，无法生成可用文件名。");
     }
 
     /// <summary>

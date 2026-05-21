@@ -16,7 +16,7 @@ public sealed class PhotoRenameServiceTests
 
         var result = service.RenameFile(sourcePath);
 
-        var expectedPath = Path.Combine(temp.Path, "20240102_030405_006.jpg");
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405.jpg");
         Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
         Assert.Equal(expectedPath, result.TargetPath);
         Assert.False(File.Exists(sourcePath));
@@ -24,26 +24,62 @@ public sealed class PhotoRenameServiceTests
     }
 
     [Fact]
-    public void RenameFile_OverwritesExistingTarget()
+    public void RenameFile_AddsSuffixWhenTargetExists()
     {
         using var temp = new TempDirectory();
         var sourcePath = temp.WriteFile("source.jpg", "new content");
-        var targetPath = temp.WriteFile("20240102_030405_006.jpg", "old content");
+        var targetPath = temp.WriteFile("20240102_030405.jpg", "old content");
         var service = CreateService(TestTimestamp);
 
         var result = service.RenameFile(sourcePath);
 
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405_001.jpg");
         Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
+        Assert.Equal(expectedPath, result.TargetPath);
         Assert.False(File.Exists(sourcePath));
         Assert.True(File.Exists(targetPath));
-        Assert.Equal("new content", File.ReadAllText(targetPath));
+        Assert.Equal("old content", File.ReadAllText(targetPath));
+        Assert.Equal("new content", File.ReadAllText(expectedPath));
+    }
+
+    [Fact]
+    public void RenameFile_IncrementsSuffixUntilTargetIsAvailable()
+    {
+        using var temp = new TempDirectory();
+        var sourcePath = temp.WriteFile("source.jpg", "new content");
+        temp.WriteFile("20240102_030405.jpg", "existing");
+        temp.WriteFile("20240102_030405_001.jpg", "existing");
+        var service = CreateService(TestTimestamp);
+
+        var result = service.RenameFile(sourcePath);
+
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405_002.jpg");
+        Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
+        Assert.Equal(expectedPath, result.TargetPath);
+        Assert.False(File.Exists(sourcePath));
+        Assert.Equal("new content", File.ReadAllText(expectedPath));
     }
 
     [Fact]
     public void RenameFile_ReturnsAlreadyNamedWhenTargetMatchesSource()
     {
         using var temp = new TempDirectory();
-        var sourcePath = temp.WriteFile("20240102_030405_006.jpg", "already named");
+        var sourcePath = temp.WriteFile("20240102_030405.jpg", "already named");
+        var service = CreateService(TestTimestamp);
+
+        var result = service.RenameFile(sourcePath);
+
+        Assert.Equal(PhotoRenameStatus.AlreadyNamed, result.Status);
+        Assert.Equal(sourcePath, result.TargetPath);
+        Assert.Equal("already named", File.ReadAllText(sourcePath));
+    }
+
+    [Fact]
+    public void RenameFile_ReturnsAlreadyNamedWhenSuffixedTargetMatchesSource()
+    {
+        using var temp = new TempDirectory();
+        temp.WriteFile("20240102_030405.jpg", "base target");
+        var sourcePath = temp.WriteFile("20240102_030405_001.jpg", "already named");
         var service = CreateService(TestTimestamp);
 
         var result = service.RenameFile(sourcePath);
@@ -66,7 +102,7 @@ public sealed class PhotoRenameServiceTests
         Assert.Equal(2, results.Count);
         Assert.Equal(PhotoRenameStatus.Failed, results[0].Status);
         Assert.Equal(PhotoRenameStatus.Renamed, results[1].Status);
-        Assert.True(File.Exists(Path.Combine(temp.Path, "20240102_030405_006.jpg")));
+        Assert.True(File.Exists(Path.Combine(temp.Path, "20240102_030405.jpg")));
     }
 
     [Fact]
@@ -76,7 +112,19 @@ public sealed class PhotoRenameServiceTests
 
         var result = PhotoRenameService.BuildTargetPath(sourcePath, TestTimestamp);
 
-        Assert.Equal(Path.Combine("photos", "20240102_030405_006.png"), result);
+        Assert.Equal(Path.Combine("photos", "20240102_030405.png"), result);
+    }
+
+    [Fact]
+    public void ResolveTargetPath_AddsSuffixWhenBaseNameExists()
+    {
+        using var temp = new TempDirectory();
+        var sourcePath = temp.WriteFile("image.png", "new content");
+        temp.WriteFile("20240102_030405.png", "existing");
+
+        var result = PhotoRenameService.ResolveTargetPath(sourcePath, TestTimestamp);
+
+        Assert.Equal(Path.Combine(temp.Path, "20240102_030405_001.png"), result);
     }
 
     private static PhotoRenameService CreateService(DateTime timestamp)
