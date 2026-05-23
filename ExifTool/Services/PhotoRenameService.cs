@@ -151,7 +151,7 @@ public sealed class PhotoRenameService
         var sourceDirectory = Path.GetDirectoryName(sourcePath)
             ?? throw new ArgumentException("源文件必须位于文件夹中。", nameof(sourcePath));
         var extension = Path.GetExtension(sourcePath).ToLowerInvariant();
-        var fileName = timestamp.ToString(FileNameTimestampFormat, CultureInfo.InvariantCulture) + extension;
+        var fileName = BuildTargetBaseName(sourcePath, timestamp) + extension;
 
         return Path.Combine(sourceDirectory, fileName);
     }
@@ -167,7 +167,7 @@ public sealed class PhotoRenameService
         var sourceDirectory = Path.GetDirectoryName(sourcePath)
             ?? throw new ArgumentException("源文件必须位于文件夹中。", nameof(sourcePath));
         var extension = Path.GetExtension(sourcePath).ToLowerInvariant();
-        var baseName = timestamp.ToString(FileNameTimestampFormat, CultureInfo.InvariantCulture);
+        var baseName = BuildTargetBaseName(sourcePath, timestamp);
 
         for (var suffix = 0; suffix <= 999; suffix++)
         {
@@ -203,6 +203,87 @@ public sealed class PhotoRenameService
     public static bool IsSupportedImageFile(string filePath)
     {
         return IsSupportedMediaFile(filePath);
+    }
+
+    private static string BuildTargetBaseName(string sourcePath, DateTime timestamp)
+    {
+        var timestampName = timestamp.ToString(FileNameTimestampFormat, CultureInfo.InvariantCulture);
+        var originalStem = GetOriginalFileNameStem(sourcePath);
+
+        return string.Concat(timestampName, "(", originalStem, ")");
+    }
+
+    private static string GetOriginalFileNameStem(string sourcePath)
+    {
+        var stem = Path.GetFileNameWithoutExtension(sourcePath).ToLowerInvariant();
+
+        return TryReadOriginalStem(stem, out var originalStem)
+            ? originalStem
+            : stem;
+    }
+
+    private static bool TryReadOriginalStem(string stem, out string originalStem)
+    {
+        originalStem = string.Empty;
+
+        if (!HasTimestampPrefix(stem) || stem.Length <= FileNameTimestampFormat.Length || stem[FileNameTimestampFormat.Length] != '(')
+        {
+            return false;
+        }
+
+        var closeParenIndex = stem.LastIndexOf(')');
+        if (closeParenIndex < FileNameTimestampFormat.Length + 1 || !HasGeneratedSuffix(stem, closeParenIndex + 1))
+        {
+            return false;
+        }
+
+        originalStem = stem[(FileNameTimestampFormat.Length + 1)..closeParenIndex];
+        return true;
+    }
+
+    private static bool HasTimestampPrefix(string stem)
+    {
+        if (stem.Length < FileNameTimestampFormat.Length)
+        {
+            return false;
+        }
+
+        for (var index = 0; index < FileNameTimestampFormat.Length; index++)
+        {
+            if (index == 8)
+            {
+                if (stem[index] != '_')
+                {
+                    return false;
+                }
+
+                continue;
+            }
+
+            if (!char.IsAsciiDigit(stem[index]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool HasGeneratedSuffix(string stem, int suffixStartIndex)
+    {
+        if (suffixStartIndex == stem.Length)
+        {
+            return true;
+        }
+
+        if (stem.Length - suffixStartIndex != 4 || stem[suffixStartIndex] != '_')
+        {
+            return false;
+        }
+
+        return char.IsAsciiDigit(stem[suffixStartIndex + 1])
+            && char.IsAsciiDigit(stem[suffixStartIndex + 2])
+            && char.IsAsciiDigit(stem[suffixStartIndex + 3]);
     }
 
     private static PhotoRenameResult Failure(string sourcePath, string errorMessage)

@@ -16,7 +16,7 @@ public sealed class PhotoRenameServiceTests
 
         var result = service.RenameFile(sourcePath);
 
-        var expectedPath = Path.Combine(temp.Path, "20240102_030405.jpg");
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405(img_0001).jpg");
         Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
         Assert.Equal(expectedPath, result.TargetPath);
         Assert.False(File.Exists(sourcePath));
@@ -28,12 +28,12 @@ public sealed class PhotoRenameServiceTests
     {
         using var temp = new TempDirectory();
         var sourcePath = temp.WriteFile("source.jpg", "new content");
-        var targetPath = temp.WriteFile("20240102_030405.jpg", "old content");
+        var targetPath = temp.WriteFile("20240102_030405(source).jpg", "old content");
         var service = CreateService(TestTimestamp);
 
         var result = service.RenameFile(sourcePath);
 
-        var expectedPath = Path.Combine(temp.Path, "20240102_030405_001.jpg");
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405(source)_001.jpg");
         Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
         Assert.Equal(expectedPath, result.TargetPath);
         Assert.False(File.Exists(sourcePath));
@@ -47,13 +47,13 @@ public sealed class PhotoRenameServiceTests
     {
         using var temp = new TempDirectory();
         var sourcePath = temp.WriteFile("source.jpg", "new content");
-        temp.WriteFile("20240102_030405.jpg", "existing");
-        temp.WriteFile("20240102_030405_001.jpg", "existing");
+        temp.WriteFile("20240102_030405(source).jpg", "existing");
+        temp.WriteFile("20240102_030405(source)_001.jpg", "existing");
         var service = CreateService(TestTimestamp);
 
         var result = service.RenameFile(sourcePath);
 
-        var expectedPath = Path.Combine(temp.Path, "20240102_030405_002.jpg");
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405(source)_002.jpg");
         Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
         Assert.Equal(expectedPath, result.TargetPath);
         Assert.False(File.Exists(sourcePath));
@@ -69,7 +69,7 @@ public sealed class PhotoRenameServiceTests
 
         var result = service.RenameFile(sourcePath);
 
-        var expectedPath = Path.Combine(temp.Path, "20240102_030405.mov");
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405(img_0001).mov");
         Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
         Assert.Equal(expectedPath, result.TargetPath);
         Assert.False(File.Exists(sourcePath));
@@ -81,12 +81,12 @@ public sealed class PhotoRenameServiceTests
     {
         using var temp = new TempDirectory();
         var sourcePath = temp.WriteFile("IMG_0001.MOV", "new content");
-        var targetPath = temp.WriteFile("20240102_030405.mov", "old content");
+        var targetPath = temp.WriteFile("20240102_030405(img_0001).mov", "old content");
         var service = CreateService(TestTimestamp);
 
         var result = service.RenameFile(sourcePath);
 
-        var expectedPath = Path.Combine(temp.Path, "20240102_030405_001.mov");
+        var expectedPath = Path.Combine(temp.Path, "20240102_030405(img_0001)_001.mov");
         Assert.Equal(PhotoRenameStatus.Renamed, result.Status);
         Assert.Equal(expectedPath, result.TargetPath);
         Assert.False(File.Exists(sourcePath));
@@ -99,7 +99,7 @@ public sealed class PhotoRenameServiceTests
     public void RenameFile_ReturnsAlreadyNamedWhenTargetMatchesSource()
     {
         using var temp = new TempDirectory();
-        var sourcePath = temp.WriteFile("20240102_030405.jpg", "already named");
+        var sourcePath = temp.WriteFile("20240102_030405(img_0001).jpg", "already named");
         var service = CreateService(TestTimestamp);
 
         var result = service.RenameFile(sourcePath);
@@ -113,8 +113,8 @@ public sealed class PhotoRenameServiceTests
     public void RenameFile_ReturnsAlreadyNamedWhenSuffixedTargetMatchesSource()
     {
         using var temp = new TempDirectory();
-        temp.WriteFile("20240102_030405.jpg", "base target");
-        var sourcePath = temp.WriteFile("20240102_030405_001.jpg", "already named");
+        temp.WriteFile("20240102_030405(img_0001).jpg", "base target");
+        var sourcePath = temp.WriteFile("20240102_030405(img_0001)_001.jpg", "already named");
         var service = CreateService(TestTimestamp);
 
         var result = service.RenameFile(sourcePath);
@@ -137,7 +137,7 @@ public sealed class PhotoRenameServiceTests
         Assert.Equal(2, results.Count);
         Assert.Equal(PhotoRenameStatus.Failed, results[0].Status);
         Assert.Equal(PhotoRenameStatus.Renamed, results[1].Status);
-        Assert.True(File.Exists(Path.Combine(temp.Path, "20240102_030405.jpg")));
+        Assert.True(File.Exists(Path.Combine(temp.Path, "20240102_030405(source).jpg")));
     }
 
     [Fact]
@@ -147,7 +147,17 @@ public sealed class PhotoRenameServiceTests
 
         var result = PhotoRenameService.BuildTargetPath(sourcePath, TestTimestamp);
 
-        Assert.Equal(Path.Combine("photos", "20240102_030405.png"), result);
+        Assert.Equal(Path.Combine("photos", "20240102_030405(image).png"), result);
+    }
+
+    [Fact]
+    public void BuildTargetPath_ReusesOriginalStemFromGeneratedName()
+    {
+        var sourcePath = Path.Combine("photos", "20231201_120000(IMG_0001)_001.JPG");
+
+        var result = PhotoRenameService.BuildTargetPath(sourcePath, TestTimestamp);
+
+        Assert.Equal(Path.Combine("photos", "20240102_030405(img_0001).jpg"), result);
     }
 
     [Fact]
@@ -155,11 +165,11 @@ public sealed class PhotoRenameServiceTests
     {
         using var temp = new TempDirectory();
         var sourcePath = temp.WriteFile("image.png", "new content");
-        temp.WriteFile("20240102_030405.png", "existing");
+        temp.WriteFile("20240102_030405(image).png", "existing");
 
         var result = PhotoRenameService.ResolveTargetPath(sourcePath, TestTimestamp);
 
-        Assert.Equal(Path.Combine(temp.Path, "20240102_030405_001.png"), result);
+        Assert.Equal(Path.Combine(temp.Path, "20240102_030405(image)_001.png"), result);
     }
 
     private static PhotoRenameService CreateService(DateTime timestamp)
