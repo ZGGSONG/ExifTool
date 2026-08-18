@@ -3,7 +3,7 @@ name: Build and release
 on:
   push:
     tags:
-      - "v.0.1.0"
+      - "v*.*.*"
 
 permissions:
   contents: write
@@ -87,6 +87,14 @@ jobs:
           cp packaging/macos/Info.plist "$app_dir/Contents/Info.plist"
           cp packaging/macos/exiftool.icns "$app_dir/Contents/Resources/exiftool.icns"
           cp README.md "$app_dir/Contents/Resources/README.md"
+
+          release_version="${GITHUB_REF_NAME#v}"
+          /usr/libexec/PlistBuddy \
+            -c "Set :CFBundleShortVersionString $release_version" \
+            "$app_dir/Contents/Info.plist"
+          /usr/libexec/PlistBuddy \
+            -c "Set :CFBundleVersion $release_version" \
+            "$app_dir/Contents/Info.plist"
 
           file "$app_dir/Contents/MacOS/ExifTool"
           plutil -lint "$app_dir/Contents/Info.plist"
