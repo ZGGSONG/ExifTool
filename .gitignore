@@ -12,7 +12,7 @@ packages/
 src/Plugins/ThirdPlugins/
 publish/
 
-# rust
+# Rust build output
 target/
 
 # claude code

@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="ExifTool/ExifTool.csproj" />
-  <Project Path="ExifTool.Tests/ExifTool.Tests.csproj" />
-</Solution>
